@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fullscreen Clock</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #clock {
+      color: white;
+      font-size: 30vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+      flex-direction: column;
+      position: relative;
+    }
+    #timeDisplay span {
+      display: block;
+    }
+    .ampm {
+      font-size: 10vw;
+    }
+    #dateDisplay {
+      font-size: 4vw;
+      margin-top: 1vw;
+      display: none;
+    }
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 10;
+      transition: opacity 0.5s;
+    }
+    #controls label,
+    #controls select,
+    #controls input[type="color"],
+    #controls button,
+    #controls input[type="file"],
+    #controls input[type="range"] {
+      color: white;
+      margin-right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      text-decoration: underline;
+    }
+    #backgroundInput {
+      display: none;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0);
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay"></div>
+  <div id="clock">
+    <div id="timeDisplay">
+      <span class="time"></span>
+      <span class="ampm"></span>
+      <div id="dateDisplay"></div>
+    </div>
+    <canvas id="analogCanvas" width="300" height="300" style="display: none; margin-top: 20px;"></canvas>
+  </div>
+
+  <div id="controls">
+    <label for="colorPicker">Font Color:</label>
+    <input type="color" id="colorPicker" value="#ffffff" />
+
+    <label for="fontSelect">Font Family:</label>
+    <select id="fontSelect">
+      <option value="Arial">Arial</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Comic Sans MS">Comic Sans MS</option>
+    </select>
+
+    <label for="fontSizeSlider">Font Size:</label>
+    <input type="range" id="fontSizeSlider" min="10" max="100" value="30" />vw
+
+    <button id="themeToggle">Toggle Light/Dark</button>
+    <button id="fullscreenBtn">Fullscreen</button>
+    <button id="formatToggle">Toggle 12/24hr</button>
+    <button id="modeToggle">Toggle Analog/Digital</button>
+    <button id="toggleDate">Toggle Date</button>
+    <button id="toggleSeconds">Toggle Seconds</button>
+    <label>Overlay:</label>
+    <input type="color" id="overlayColor" value="#000000" />
+    <input type="range" id="overlayOpacity" min="0" max="1" step="0.01" value="0" title="Overlay Opacity" />
+    <button onclick="document.getElementById('backgroundInput').click()">Set Background</button>
+    <input type="file" id="backgroundInput" accept="image/*" />
+  </div>
+
+  <audio id="hourChime">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const timeDisplay = document.querySelector("#timeDisplay .time");
+    const ampmDisplay = document.querySelector("#timeDisplay .ampm");
+    const dateDisplay = document.getElementById("dateDisplay");
+    const overlay = document.getElementById("overlay");
+    const overlayColor = document.getElementById("overlayColor");
+    const overlayOpacity = document.getElementById("overlayOpacity");
+    const canvas = document.getElementById("analogCanvas");
+    const ctx = canvas.getContext("2d");
+    const controls = document.getElementById("controls");
+    const toggleDateBtn = document.getElementById("toggleDate");
+    const toggleModeBtn = document.getElementById("modeToggle");
+    const toggleSecondsBtn = document.getElementById("toggleSeconds");
+    const fontSizeSlider = document.getElementById("fontSizeSlider");
+    const colorPicker = document.getElementById("colorPicker");
+    let use24Hour = false;
+    let analogMode = false;
+    let showDate = false;
+    let showSeconds = true;
+    let hideTimeout;
+
+    colorPicker.addEventListener("input", () => {
+      clock.style.color = colorPicker.value;
+    });
+
+    fontSizeSlider.addEventListener("input", () => {
+      clock.style.fontSize = fontSizeSlider.value + "vw";
+    });
+
+    toggleDateBtn.addEventListener("click", () => {
+      showDate = !showDate;
+      dateDisplay.style.display = showDate ? 'block' : 'none';
+    });
+
+    toggleModeBtn.addEventListener("click", () => {
+      analogMode = !analogMode;
+      canvas.style.display = analogMode ? 'block' : 'none';
+      document.getElementById("timeDisplay").style.display = analogMode ? 'none' : 'block';
+    });
+
+    toggleSecondsBtn.addEventListener("click", () => {
+      showSeconds = !showSeconds;
+    });
+
+    function updateTime() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      const paddedMinutes = minutes < 10 ? '0' + minutes : minutes;
+      const paddedSeconds = seconds < 10 ? '0' + seconds : seconds;
+
+      if (use24Hour) {
+        const paddedHours = hours < 10 ? '0' + hours : hours;
+        timeDisplay.textContent = showSeconds ? `${paddedHours}:${paddedMinutes}:${paddedSeconds}` : `${paddedHours}:${paddedMinutes}`;
+        ampmDisplay.textContent = "";
+      } else {
+        const displayHours = hours % 12 || 12;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        timeDisplay.textContent = showSeconds ? `${displayHours}:${paddedMinutes}:${paddedSeconds}` : `${displayHours}:${paddedMinutes}`;
+        ampmDisplay.textContent = ampm;
+      }
+
+      if (minutes === 0 && seconds === 0) {
+        document.getElementById("hourChime").play();
+      }
+
+      if (showDate) {
+        const dateStr = now.toLocaleDateString(undefined, {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        dateDisplay.textContent = dateStr;
+      }
+
+      if (analogMode) drawClock(now);
+    }
+
+    function drawClock(date) {
+      const radius = canvas.height / 2;
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(radius, radius);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.95, 0, 2 * Math.PI);
+      ctx.fillStyle = 'black';
+      ctx.fill();
+
+      const hour = date.getHours() % 12;
+      const minute = date.getMinutes();
+      const second = date.getSeconds();
+
+      drawHand((hour + minute / 60) * 30, radius * 0.5, 7);
+      drawHand(minute * 6, radius * 0.8, 5);
+      drawHand(second * 6, radius * 0.9, 2, 'red');
+
+      ctx.restore();
+    }
+
+    function drawHand(angle, length, width, color = 'white') {
+      const rad = angle * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(length * Math.sin(rad), -length * Math.cos(rad));
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
+
+    function showControlsTemporarily() {
+      controls.style.opacity = '1';
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        if (document.fullscreenElement) {
+          controls.style.opacity = '0';
+        }
+      }, 5000);
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    document.addEventListener('mousemove', showControlsTemporarily);
+    document.addEventListener('click', showControlsTemporarily);
+    showControlsTemporarily();
+
+    document.getElementById("fullscreenBtn").addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        controls.style.opacity = '0';
+      } else {
+        document.exitFullscreen();
+        controls.style.opacity = '1';
+      }
+    });
+
+    document.getElementById("backgroundInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.body.style.backgroundImage = `url(${evt.target.result})`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundPosition = 'center';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    overlayColor.addEventListener("input", updateOverlay);
+    overlayOpacity.addEventListener("input", updateOverlay);
+
+    function updateOverlay() {
+      const color = overlayColor.value;
+      const opacity = overlayOpacity.value;
+      const rgba = hexToRgba(color, opacity);
+      overlay.style.background = rgba;
+    }
+
+    function hexToRgba(hex, opacity) {
+      const bigint = parseInt(hex.slice(1), 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+  </script>
+</body>
+</html>

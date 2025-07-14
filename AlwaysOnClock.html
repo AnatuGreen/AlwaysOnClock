@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fullscreen Clock</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #clock {
+      color: white;
+      font-size: 25vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+    }
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    #controls label,
+    #controls select,
+    #controls input[type="color"],
+    #controls button {
+      color: white;
+      margin-right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="clock">12:00</div>
+
+  <div id="controls">
+    <label for="colorPicker">Font Color:</label>
+    <input type="color" id="colorPicker" value="#ffffff" />
+
+    <label for="fontSelect">Font Family:</label>
+    <select id="fontSelect">
+      <option value="Arial">Arial</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+
+    <button id="themeToggle">Toggle Light/Dark</button>
+    <button id="fullscreenBtn">Fullscreen</button>
+  </div>
+
+  <audio id="hourChime">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      const paddedMinutes = minutes < 10 ? '0' + minutes : minutes;
+      const timeString = `${hours}:${paddedMinutes} ${ampm}`;
+      document.getElementById("clock").textContent = timeString;
+
+      // Play chime at the top of the hour
+      if (minutes === 0 && seconds === 0) {
+        document.getElementById("hourChime").play();
+      }
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    document.getElementById("colorPicker").addEventListener("input", function (e) {
+      document.getElementById("clock").style.color = e.target.value;
+    });
+
+    document.getElementById("fontSelect").addEventListener("change", function (e) {
+      document.getElementById("clock").style.fontFamily = e.target.value;
+    });
+
+    document.getElementById("themeToggle").addEventListener("click", function () {
+      const body = document.body;
+      const clock = document.getElementById("clock");
+      if (body.style.backgroundColor === 'white') {
+        body.style.backgroundColor = 'black';
+        clock.style.color = document.getElementById("colorPicker").value || 'white';
+      } else {
+        body.style.backgroundColor = 'white';
+        clock.style.color = document.getElementById("colorPicker").value || 'black';
+      }
+    });
+
+    document.getElementById("fullscreenBtn").addEventListener("click", function () {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
