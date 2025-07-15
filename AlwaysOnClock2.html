@@ -44,15 +44,22 @@
     }
 #controls {
   position: absolute;
-  top: 70px; /* push it below the settings button */
+  top: 70px;
   left: 20px;
   background: rgba(0, 0, 0, 0.7);
   padding: 10px;
   border-radius: 8px;
   z-index: 10;
-  transition: opacity 0.5s;
-  display: none; /* hide by default */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateY(0);
+  opacity: 1;
 }
+#controls.hidden {
+  transform: translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+}
+
 
     #controls label,
     #controls select,
@@ -177,6 +184,35 @@
     const fontSelect = document.getElementById("fontSelect");
 
     const settingsToggle = document.getElementById("settingsToggle");
+    let settingsTimeout;
+
+// Load visibility state from localStorage
+const controlsHidden = localStorage.getItem("controlsHidden") === "true";
+if (controlsHidden) {
+  controls.classList.add("hidden");
+}
+
+// Toggle visibility and save state
+settingsToggle.addEventListener("click", () => {
+  controls.classList.toggle("hidden");
+  const isHidden = controls.classList.contains("hidden");
+  localStorage.setItem("controlsHidden", isHidden);
+  if (!isHidden) autoHideControls();
+});
+
+// Auto-hide after inactivity (10s)
+function autoHideControls() {
+  clearTimeout(settingsTimeout);
+  settingsTimeout = setTimeout(() => {
+    controls.classList.add("hidden");
+    localStorage.setItem("controlsHidden", true);
+  }, 10000);
+}
+
+// Reset timer on interaction
+document.addEventListener("mousemove", autoHideControls);
+document.addEventListener("click", autoHideControls);
+
 
 settingsToggle.addEventListener("click", () => {
   controls.style.display = controls.style.display === "none" ? "block" : "none";
