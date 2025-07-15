@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fullscreen Clock</title>
+  <!-- Preload Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Raleway&family=Ubuntu&family=Merriweather&family=Poppins&family=Nunito&family=Playfair+Display&family=Rubik&family=Source+Sans+Pro&family=Quicksand&family=PT+Sans&family=Work+Sans&family=Oswald&family=Mulish&family=Cabin&family=DM+Sans&family=Fira+Sans&display=swap" rel="stylesheet">
+
   <style>
     html, body {
       margin: 0;
@@ -97,15 +102,36 @@
     <input type="color" id="colorPicker" value="#ffffff" />
 
     <label for="fontSelect">Font Family:</label>
-    <select id="fontSelect">
-      <option value="Arial">Arial</option>
-      <option value="Courier New">Courier New</option>
-      <option value="Georgia">Georgia</option>
-      <option value="Times New Roman">Times New Roman</option>
-      <option value="Verdana">Verdana</option>
-      <option value="Tahoma">Tahoma</option>
-      <option value="Comic Sans MS">Comic Sans MS</option>
-    </select>
+<select id="fontSelect">
+  <option value="Arial">Arial</option>
+  <option value="Courier New">Courier New</option>
+  <option value="Georgia">Georgia</option>
+  <option value="Times New Roman">Times New Roman</option>
+  <option value="Verdana">Verdana</option>
+  <option value="Tahoma">Tahoma</option>
+  <option value="Comic Sans MS">Comic Sans MS</option>
+  <option value="Roboto">Roboto</option>
+  <option value="Open Sans">Open Sans</option>
+  <option value="Lato">Lato</option>
+  <option value="Montserrat">Montserrat</option>
+  <option value="Raleway">Raleway</option>
+  <option value="Ubuntu">Ubuntu</option>
+  <option value="Merriweather">Merriweather</option>
+  <option value="Poppins">Poppins</option>
+  <option value="Nunito">Nunito</option>
+  <option value="Playfair Display">Playfair Display</option>
+  <option value="Rubik">Rubik</option>
+  <option value="Source Sans Pro">Source Sans Pro</option>
+  <option value="Quicksand">Quicksand</option>
+  <option value="PT Sans">PT Sans</option>
+  <option value="Work Sans">Work Sans</option>
+  <option value="Oswald">Oswald</option>
+  <option value="Mulish">Mulish</option>
+  <option value="Cabin">Cabin</option>
+  <option value="DM Sans">DM Sans</option>
+  <option value="Fira Sans">Fira Sans</option>
+</select>
+
 
     <label for="fontSizeSlider">Font Size:</label>
     <input type="range" id="fontSizeSlider" min="10" max="100" value="30" />vw
@@ -158,6 +184,7 @@ fontSelect.addEventListener("change", () => {
     colorPicker.addEventListener("input", () => {
       clock.style.color = colorPicker.value;
     });
+
 
     fontSizeSlider.addEventListener("input", () => {
       clock.style.fontSize = fontSizeSlider.value + "vw";
