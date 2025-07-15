@@ -139,6 +139,12 @@
     const toggleSecondsBtn = document.getElementById("toggleSeconds");
     const fontSizeSlider = document.getElementById("fontSizeSlider");
     const colorPicker = document.getElementById("colorPicker");
+    const fontSelect = document.getElementById("fontSelect");
+
+fontSelect.addEventListener("change", () => {
+  clock.style.fontFamily = fontSelect.value;
+});
+
     let use24Hour = false;
     let analogMode = false;
     let showDate = false;
